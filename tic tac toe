@@ -1,0 +1,281 @@
+import pygame
+import random
+from pygame.locals import *
+from math import inf as infinity
+
+# rozdzielczosci ekranu
+resx = 800
+resy = 800
+
+# gowno z pygame
+pygame.init()
+pygame.font.init
+font = pygame.font.Font(pygame.font.get_default_font(), 50)
+screen = pygame.display.set_mode((resx, resy))
+font = pygame.font.SysFont("Courier", 40)
+font2 = pygame.font.SysFont("Fixed Sys", 50)
+pygame.display.set_caption("Kolo i krzyz")
+tab = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+POLE = [' ' for x in range(10)]
+POLE[1] = (int(resx * 0.2), int(resy * 0.2))
+POLE[2] = (int(resx * 0.5), int(resy * 0.2))
+POLE[3] = (int(resx * 0.8), int(resy * 0.2))
+POLE[4] = (int(resx * 0.2), int(resy * 0.5))
+POLE[5] = (int(resx * 0.5), int(resy * 0.5))
+POLE[6] = (int(resx * 0.8), int(resy * 0.5))
+POLE[7] = (int(resx * 0.2), int(resy * 0.8))
+POLE[8] = (int(resx * 0.5), int(resy * 0.8))
+POLE[9] = (int(resx * 0.8), int(resy * 0.8))
+rzutnik = {"01": POLE[2], "00": POLE[1], "02": POLE[3], "10": POLE[4], "11": POLE[5], "12": POLE[6], "20": POLE[7],
+           "21": POLE[8], "22": POLE[9]}
+lastplayer=2
+
+# rysuje linie do gry
+def kratka():
+    pygame.draw.line(screen, (255, 255, 255), (int(resy * 0.33), int(resy - resy * 0.9)),
+                     (int(resy * 0.33), int(resy - resy * 0.1)), 5)
+    pygame.draw.line(screen, (255, 255, 255), (int(resy * 0.66), int(resy - resy * 0.9)),
+                     (int(resy * 0.66), int(resy - resy * 0.1)), 5)
+    pygame.draw.line(screen, (255, 255, 255), (int(resy - resy * 0.9), int(resy * 0.66)),
+                     (int(resy - resy * 0.1), int(resy * 0.66)), 5)
+    pygame.draw.line(screen, (255, 255, 255), (int(resy - resy * 0.9), int(resy * 0.33)),
+                     (int(resy - resy * 0.1), int(resy * 0.33)), 5)
+
+
+# Wyrownuje obiekt do siatki:
+def gridchecker(mouse_pos):
+    # pole [0][0]
+    if mouse_pos[0] < resx * 0.33 and mouse_pos[1] < resy * 0.33:
+        mouse_pos = (int(resx * 0.2), int(resy * 0.2))
+    # pole[0][1]
+    elif mouse_pos[0] > resx * 0.33 and mouse_pos[0] < resx * 0.66 and mouse_pos[1] < resy * 0.33:
+        mouse_pos = (int(resx * 0.5), int(resy * 0.2))
+    # pole[0][2]
+    elif mouse_pos[0] > resx * 0.66 and mouse_pos[1] < resy * 0.33:
+        mouse_pos = (int(resx * 0.8), int(resy * 0.2))
+    # pole[1][0]
+    elif mouse_pos[0] < resx * 0.33 and mouse_pos[1] > resy * 0.33 and mouse_pos[1] < resy * 0.66:
+        mouse_pos = (int(resx * 0.2), int(resy * 0.5))
+    # pole[1][1]
+    elif mouse_pos[0] > resx * 0.33 and mouse_pos[0] < resx * 0.66 and mouse_pos[1] > resy * 0.33 and mouse_pos[
+        1] < resy * 0.66:
+        mouse_pos = (int(resx * 0.5), int(resy * 0.5))
+    # pole[1][2]
+    elif mouse_pos[0] > resx * 0.66 and mouse_pos[1] > resy * 0.33 and mouse_pos[1] < resy * 0.66:
+        mouse_pos = (int(resx * 0.8), int(resy * 0.5))
+    # pole[0][2]
+    elif mouse_pos[0] < resx * 0.33 and mouse_pos[1] > resy * 0.66:
+        mouse_pos = (int(resx * 0.2), int(resy * 0.8))
+    # pole[1][2]
+    elif mouse_pos[0] > resx * 0.33 and mouse_pos[0] < resx * 0.66 and mouse_pos[1] > resy * 0.66:
+        mouse_pos = (int(resx * 0.5), int(resy * 0.8))
+    # pole[2][2]
+    elif mouse_pos[0] > resx * 0.66 and mouse_pos[1] > resx * 0.66:
+        mouse_pos = (int(resx * 0.8), int(resy * 0.8))
+    return mouse_pos
+
+
+# rysuje kolko
+class Kolko:
+    def __init__(self, mouse_pos):
+        mouse_pos = gridchecker(mouse_pos)
+        pygame.draw.circle(screen, (255, 0, 0), (mouse_pos), int(resx * 0.1))
+
+
+# rysuje krzyzyk
+class Krzyzyk:
+    def __init__(self, mouse_pos):
+        mouse_pos = gridchecker(mouse_pos)
+        ramiex = int(resx * 0.1)
+        ramiey = int(resy * 0.1)
+        pygame.draw.line(screen, (0, 0, 255), mouse_pos, (mouse_pos[0] - ramiex, mouse_pos[1] - ramiey), 10)
+        pygame.draw.line(screen, (0, 0, 255), (mouse_pos[0], mouse_pos[1]),
+                         (mouse_pos[0] + ramiex, mouse_pos[1] + ramiey), 10)
+        pygame.draw.line(screen, (0, 0, 255), (mouse_pos[0], mouse_pos[1]),
+                         (mouse_pos[0] + ramiex, mouse_pos[1] - ramiey), 10)
+        pygame.draw.line(screen, (0, 0, 255), (mouse_pos[0], mouse_pos[1]),
+                         (mouse_pos[0] - ramiex, mouse_pos[1] + ramiey), 10)
+
+
+def aiznak(x, y):
+    check = False
+    mouse_pos = rzutnik.get(str(x) + str(y))
+    mouse_pos = gridchecker(mouse_pos)
+    znak = Kolko(mouse_pos)
+    znak
+
+
+# Rozpoznaje ktora tura, poczym wywoluje kolko lub krzyzyk poczym dodaje przypisana wartosc do tabelki ktora sprawdza czy gracz wygral
+def postawznak(mouse_pos):
+    global lastplayer
+    global tab
+    i = 0
+    mouse_pos2 = gridchecker(mouse_pos)
+
+    for x in range(3):
+        for y in range(3):
+            i = i + 1
+            if tab[x][y] == 0 and mouse_pos2 == POLE[i]:
+                znak = Krzyzyk(mouse_pos2)
+                gracz = 1
+                znak
+                tab[x][y] = gracz
+                lastplayer=1
+
+
+czekamx = font.render("Czekam na gracza X...", True, (100, 100, 100), (0, 0, 0))
+czekamo = font.render("Czekam na gracza O...", True, (100, 100, 100), (0, 0, 0))
+
+
+def winner(tab):
+    for gracz in range(1, 3):
+        for a in range(3):
+            if (tab[a][0] == gracz and tab[a][1] == gracz and tab[a][2] == gracz):
+                # line = (rzutnik.get(str(a) + str(0)), rzutnik.get(str(a) + str(2)))
+                # pygame.draw.line(screen, (0, 255, 0), line[0],line[1], 10)
+                return gracz
+            elif (tab[0][a] == gracz and tab[1][a] == gracz and tab[2][a] == gracz):
+                # line = (rzutnik.get(str(0) + str(a)), rzutnik.get(str(2) + str(a)))
+                # pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+                return gracz
+            elif (tab[0][0] == gracz and tab[1][1] == gracz and tab[2][2] == gracz):
+                # line = (rzutnik.get(str(0) + str(0)), rzutnik.get(str(2) + str(2)))
+                # pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+                return gracz
+            elif (tab[2][0] == gracz and tab[1][1] == gracz and tab[0][2] == gracz):
+                # line = (rzutnik.get(str(2) + str(0)), rzutnik.get(str(0) + str(2)))
+                # pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+                return gracz
+
+    wolnepole = 9
+    for a in range(3):
+        for b in range(3):
+            if tab[a][b] != 0:
+                wolnepole -= 1
+    if wolnepole == 0:
+        return 3
+
+
+def koniec(tab):
+    for a in range(3):
+        for gracz in range(1, 3):
+            if (tab[a][0] == gracz and tab[a][1] == gracz and tab[a][2] == gracz):
+                line = (rzutnik.get(str(a) + str(0)), rzutnik.get(str(a) + str(2)))
+                pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+            elif (tab[0][a] == gracz and tab[1][a] == gracz and tab[2][a] == gracz):
+                line = (rzutnik.get(str(0) + str(a)), rzutnik.get(str(2) + str(a)))
+                pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+            elif (tab[0][0] == gracz and tab[1][1] == gracz and tab[2][2] == gracz):
+                line = (rzutnik.get(str(0) + str(0)), rzutnik.get(str(2) + str(2)))
+                pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+            elif (tab[2][0] == gracz and tab[1][1] == gracz and tab[0][2] == gracz):
+                line = (rzutnik.get(str(2) + str(0)), rzutnik.get(str(0) + str(2)))
+                pygame.draw.line(screen, (0, 255, 0), line[0], line[1], 10)
+    tab = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    return tab
+
+
+def ai(tab):
+    global lastplayer
+    bestScore = -infinity
+    for x in range(3):
+        for y in range(3):
+            if tab[x][y] == 0:
+                tab[x][y] = 2
+                score = minimax(tab, 0, False)
+                tab[x][y] = 0
+                if score > bestScore:
+                    bestScore = score
+                    move = [x, y]
+    tab[move[0]][move[1]] = 2
+    aiznak(move[0], move[1])
+    lastplayer=2
+
+
+
+
+def minimax(tab, depth, isMax):
+    result = winner(tab)
+    if result != None:
+        if result == 2:
+            scores = 10
+        elif result == 1:
+            scores = -10
+        elif result == 3:
+            scores = 0
+        return scores
+
+    if isMax:
+        bestScore = -infinity
+        for x in range(3):
+            for y in range(3):
+                if tab[x][y] == 0:
+                    tab[x][y] = 2
+                    score = minimax(tab, depth + 1, False)
+                    tab[x][y] = 0
+                    bestScore = max(score, bestScore)
+        return bestScore
+    else:
+        bestScore = infinity
+        for x in range(3):
+            for y in range(3):
+                if tab[x][y] == 0:
+                    tab[x][y] = 1
+                    score = minimax(tab, depth + 1, True)
+                    tab[x][y] = 0
+                    bestScore = min(score, bestScore)
+        return bestScore
+
+
+running = True
+screen.fill((0, 0, 0))
+kratka()
+scorekolko = 0
+scorekrzyzyk = 0
+scoreremis = 0
+napis = "Krzyzyk 10"
+napis2 = "Remis:10"
+textsize = font.size(napis)
+textsize2 = font.size(napis2)
+text1 = font.render(napis, True, (225, 0, 0), (30, 30, 30))
+text2 = font.render(napis2, True, (0, 0, 255), (30, 30, 30))
+text3 = font2.render("Nacisnij spacje, aby zagrac ponownie", True, (237, 255, 128), None)
+
+ktorygracz = 0
+while running:
+    wynik1 = font.render("Kolko:" + str(scorekolko), True, (255, 0, 0), (0, 0, 0))
+    wynik2 = font.render("Krzyzyk:" + str(scorekrzyzyk), True, (0, 0, 255), (0, 0, 0))
+    wynik3 = font.render("Remis:" + str(scoreremis), True, (0, 255, 0), (0, 0, 0))
+    if lastplayer==1 and ktorygracz < 1:
+        ai(tab)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == MOUSEBUTTONDOWN and ktorygracz < 1:
+            mouse_pos = pygame.mouse.get_pos()
+            postawznak(mouse_pos)
+        if winner(tab) == 2:
+            screen.blit(text3, (100, 350))
+            scorekolko = scorekolko + 1
+            tab = koniec(tab)
+            ktorygracz = 2
+        elif winner(tab) == 1:
+            screen.blit(text3, (100, 350))
+            scorekrzyzyk = scorekrzyzyk + 1
+            tab = koniec(tab)
+            ktorygracz = 3
+        elif winner(tab) == 3:
+            screen.blit(text3, (100, 350))
+            scoreremis = scoreremis + 1
+            tab = koniec(tab)
+            ktorygracz = 4
+        elif event.type == pygame.KEYDOWN and ktorygracz > 1:
+            if event.key == pygame.K_SPACE:
+                tab = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+                screen.fill((0, 0, 0))
+                kratka()
+                ktorygracz = 0
+    screen.blit(wynik1, (0, 0))
+    screen.blit(wynik2, ((resx - textsize[0]), 0))
+    screen.blit(wynik3, (((resx / 2) - 100), 0))
+    pygame.display.update()
